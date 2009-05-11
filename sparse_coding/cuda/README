@@ -9,9 +9,9 @@ How to run:
 Edit Makefile and update CUDA_INC and CUDA_LIB to your machine's CUDA locations for the include and library files.
 
 Run:
-$ ./paper_demo.sh
+$ ./paper_demo.sh (short version)
 or
-$ ./paper.sh
+$ ./paper.sh (longer version)
 
 ====================================================
 Description:
