@@ -13,6 +13,10 @@ $ ./paper_demo.sh (short version)
 or
 $ ./paper.sh (longer version)
 
+All directories and files, including 'natural' images required as inputs and temporary outputs are checked in, so if you've checked the source code out, should not have to change anything. 
+
+For debugging purposes though: depends on ../../images directory. Also depends on a ./tmp directory existing.
+
 ====================================================
 Description:
 ====================================================
