@@ -1,17 +1,12 @@
-#Makefile
-NVCC	       := nvcc
+CUDA_INC	:= /Developer/CUDA/common/inc
+CUDA_LIB	:= /usr/local/cuda
+
+NVCC       := nvcc
 CPP	       := g++
-CUDA_INC_PATH  := -I. -I/usr/local/cuda/include -I/home/manand/NVIDIA_CUDA_SDK/common/inc
-CUDA_LIB_PATH  := -L/home/manand/NVIDIA_CUDA_SDK/lib -L/usr/local/cuda/lib
+CUDA_INC_PATH  := -I. -I$(CUDA_INC)
+CUDA_LIB_PATH  := -L$(CUDA_LIB)/sdk/lib -L$(CUDA_LIB)/lib
 NVCC_OPTIONS   := 
-#NVCC_OPTIONS   := --compiler-options -fno-strict-aliasing -DUNIX -DGPU -O3 
-#NVCC_OPTIONS   := --compiler-options -fno-strict-aliasing -DUNIX -deviceemu -DDEBUG
-#--ptxas-options=-v
-# -pg -G0 -O3
 CPP_OPTIONS    := -fPIC -O3 
-#CPP_OPTIONS    := -fPIC -DDEBUG
-#-pg
-#CUDA_LIBS      := -lcutil -lcudart -lcublas
 CUDA_LIBS      := -lcutil -lcudart -lcublas
 TARGET		   := cl1ls
 
