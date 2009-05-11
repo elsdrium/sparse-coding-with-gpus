@@ -1,7 +1,9 @@
+/* Author: Anand Madhavan */
+
 #include <iostream>
 #include "cublas.h"
 #include "Matrix.hh"
-#include "proj_grad_desc.h"
+#include "proj_grad_descent.h"
 #include "GPU.hh"
 float proj_grad_descent_cu (Matrix& Bout, /* : output, size: k, n */ 
 		float c, /* : input */

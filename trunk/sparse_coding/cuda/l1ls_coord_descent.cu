@@ -1,3 +1,5 @@
+/* Author: Anand Madhavan */
+
 #include <iostream>
 #include "l1ls_coord_descent.hh"
 #include "coreutils.hh"

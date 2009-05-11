@@ -1,3 +1,4 @@
+/* Author: Anand Madhavan */
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
@@ -15,7 +16,7 @@
 
 #include "Matrix.hh"
 #include "l1ls_coord_descent.hh"
-#include "proj_grad_desc.h"
+#include "proj_grad_descent.h"
 using namespace std;
 
 bool g_verbose;

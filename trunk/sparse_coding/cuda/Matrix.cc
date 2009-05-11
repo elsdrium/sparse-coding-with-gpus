@@ -1,3 +1,5 @@
+/* Author: Anand Madhavan */
+
 #include "Matrix.hh"
 #include <iostream>
 #include "coreutils.hh"
@@ -25,10 +27,8 @@ float get_val(const Matrix& m, int row, int col) {
 	assert_bounds(m,row,col);
 	if(!m.row_contiguous)
 		return m.values[m.num_vals*col+row];
-//		return m.values[col][row];
 	else 
 		return m.values[m.num_vals*row+col];
-//		return m.values[row][col];
 }
 
 void set_val(Matrix& m, int row, int col, float value) {
@@ -87,16 +87,9 @@ bool init(Matrix& m, int num_rows, int num_cols, bool row_contiguous) {
 		exit(1);
 	}
 	return true;
-//	m.values = (float**) malloc(m.num_ptrs*sizeof(float*));
-//	for(int i=0;i<m.num_ptrs;i++) {
-//		m.values[i] = (float*) malloc(m.num_vals*sizeof(float));
-//	}
 }
 
 void freeup(Matrix& m) {
-//	for(int i=0;i<m.num_ptrs;i++) {
-//		free(m.values[i]);
-//	}
 	free(m.values);
 	m.values = 0;
 	m.num_ptrs = 0;
@@ -144,20 +137,13 @@ bool read_matrix(FILE* inf, Matrix& m, const std::string& tag, bool row_contiguo
 	else 
 		head.append(" %d %d\n");
 	int row, col;
-//	std::cerr << "\nhead: ["<<head<<"]";
 	fscanf(inf,head.c_str(),&row,&col);
-//	std::cerr<< "\nrow, col: "<< row << " "<< col;
 	init(m,row,col,row_contiguous);
-//	m.resize(row);
-//	for(int i=0;i<row;i++)
-//		m[i].resize(col);
 	for(int i=0;i<row;i++) {
 		for(int j=0;j<col;j++) {
 			float val;
 			fscanf(inf,"%g ",&val);
-//			std::cerr << val << "\t";
 			set_val(m,i,j,val);
-//			m[i][j] = val;
 			if(j==col-1) {
 				fscanf(inf,"\n");
 			}
@@ -174,8 +160,6 @@ float avgdiff(const Matrix& m1, const Matrix& m2) {
 			float diff = (get_val(m1,i,j)-get_val(m2,i,j));
 			diff = diff*diff;
 			diffsqr+=diff;
-//			printf("row[%d], col[%d]: ",i,j);
-//			std::cout << "computed: " << get_val(m1,i,j) << ", actual: " << get_val(m2,i,j) << std::endl;
 			if(fabs(get_val(m2,i,j))>1e-14)
 				nonzeros++;
 		}
@@ -194,16 +178,12 @@ float* get_col(Matrix& m, int col) {
 	}
 	assert_bounds(m,0,col);
 	return m.values+m.num_vals*col;
-//	return m.values[col];
 }
 
 void print_matrix(const Matrix& m, const std::string& tag) {
 	std::cerr << tag << " " << num_rows(m) << " " << num_cols(m) << std::endl;
 	for(int i = 0; i < num_rows(m); i++) {
 		for(int j = 0; j < num_cols(m); j++) {
-//	std::cerr << tag << " " << m.size() << " " << m[0].size() << std::endl;
-//	for(int i = 0; i < m.size(); i++) {
-//		for(int j = 0; j < m[i].size(); j++) {
 			std::cerr << get_val(m,i,j) << " ";
 			if(j == num_cols(m)-1) 
 				std::cerr << std::endl;
