@@ -22,7 +22,7 @@ bool g_verbose;
 
 void print_usage(const char** argv)
 {
-    std::cout << "Usage: " << argv[0] << "-runwhat=<natural|digits|basis|coeffs|testcublas|findcoeffs> "<< 
+    std::cout << "Usage: " << argv[0] << "-runwhat=<natural|digits|basis|coeffs|findcoeffs> "<< 
     "-mb=<batch size> -nb=<number of batches> " << 
     "-n=<# basis vectors> -k=<num dims> -nepoch=<iterations> -imagesdir=<images dir>" << 
     "-filename=<coeffs/digits file> -basisdir=<basis output directory> " << 
@@ -36,9 +36,8 @@ struct Options {
   Options():device(0),sigma(1),c(1),nepoch(1),
   nbasis_iters(15),eta(0.01),beta(0.4),tol(1e-1),
   filename(0),runwhat(0),basisfile(0),labelfile(0),numtrain(100){ }
-  //filename = (char*)malloc(512*sizeof(char));}
 
-  ~Options(){}//{ free(filename);}
+  ~Options(){}
   int device;
   bool verbose;
   bool run_tests;
@@ -100,7 +99,6 @@ bool test_cpu(float gamma, Matrix& A, Matrix& Y, Matrix& Xinit, Matrix& Xout)
 		cpu::CpuEventTimer timer(expt_time);
 		l1ls_coord_descent(c_xout, gamma, A, Y, Xinit);
 	}
-	//init(c_xout,num_rows(Xinit),num_cols(Xinit));assign(c_xout,Xout);
 	std::cerr<<"\nAvg error in xout: " << avgdiff(c_xout,Xout) << ", cpu time: " << expt_time << "[ms]\n";	
 	freeup(c_xout);
 	return true;
@@ -145,16 +143,6 @@ bool test(bool cpu)
 	freeup(Y);
 	freeup(Xinit);
 	freeup(Xout);
-	return ret_val;
-}
-
-bool testboth()
-{
-//	printf("Testing on cpu\n");
-	bool ret_val;
-//	ret_val = test(true);
-	printf("Testing on gpu\n");
-	ret_val = test(false);
 	return ret_val;
 }
 
@@ -265,7 +253,6 @@ bool read_data_basis(const std::string& fname,
 		float& c, float& sigma,  
 		Matrix& Binit, Matrix& X, Matrix& S, Matrix& Bout) 
 { 
-  // read file small_file.txt
   // read matrices
   FILE* inf = fopen(fname.c_str(),"rt");
   if(inf==0) {
@@ -280,25 +267,18 @@ bool read_data_basis(const std::string& fname,
 	  cout << "Error reading matrix Binit\n";
 	  return false;
   }
-//  print_matrix(Binit,"Binit");
   if(!read_matrix(inf,X,"X",false)) {
 	  cout << "Error reading matrix X\n";
 	  return false;
   }
-//  print_matrix(X,"X");
-//  DEBUGIFY(print_matrix(X,"X"));
   if(!read_matrix(inf,S,"S",false)) {
 	  cout << "Error reading matrix S\n";
 	  return false;
   }
-//  print_matrix(S,"S");
-//  DEBUGIFY(print_matrix(S,"S"));
   if(!read_matrix(inf,Bout,"Bout",false)) {
 	  cout << "Error reading matrix Bout\n";
 	  return false;
   }
-//  print_matrix(Bout,"Bout");
-//  DEBUGIFY(print_matrix(Bout,"Bout"));
   fclose(inf);
   return true;
 }
@@ -431,11 +411,7 @@ void get_images_as_input_matrix(Matrix& bigX, const Options& opts)
 {
 	int k = opts.k;
 	int m = opts.mb;
-//	cerr << "k: " << k << endl;
-//	cerr << "m: " << m << endl;
-//	cerr << "n: " << n << endl;
-	// TODO:
-	// 1) read all images into memory (62 files x 500 x 500 *4byte-floats each = 62MB)
+	// 1) read all images into memory...
 	vector<Matrix*> imgs;
 	int img_size = read_images(opts.imagesdir,imgs);
 	// 2) arrange images into X matrix: in random patches ...
@@ -445,24 +421,17 @@ void get_images_as_input_matrix(Matrix& bigX, const Options& opts)
 	// repeat this for 1000 images
 	// repeat this 100 times or so
 	int buffer = dim;
-//	int num_patches_per_img = (img_size-dim-2*buffer)^2;
-//	int num_patches = num_patches_per_img*imgs.size();
 	// Initialize B and S to random values
-//	cerr << "Computing BigX\n";
 	init(bigX, k, m*nbatches, false);
 	for(size_t iim=0;iim< m*nbatches; ++iim) {
 		// pick random image...
 		int img_index = rand()%imgs.size(); // in the range 0 to imgs.size()
 		// now pick in the range between buffer and img_size-buffer-dim
-//		cerr << "From Image: " << img_index << endl;
 		const Matrix& img = *(imgs[img_index]);
-//		print_matrix(img, "Image");
 		int upper = img_size-buffer-dim;
 		int lower = buffer;
 		int rr_pos = rand()%(upper-lower)+lower;
 		int rc_pos = rand()%(upper-lower)+lower;
-//		cerr << "Upper: " << upper << " Lower: " << lower <<endl;
-//		cerr << "From position: " << rr_pos << " " << rc_pos <<endl;
 		int r_in_x=0;
 		for(size_t c=0;c<dim;++c) {
 			for(size_t r=0;r<dim;r++) {
@@ -470,8 +439,6 @@ void get_images_as_input_matrix(Matrix& bigX, const Options& opts)
 			}
 		}
 	}
-//	print_matrix(bigX,"Big X");
-//	cerr << "Initial matrix allocations\n";	
 	for(size_t i=0;i<imgs.size();++i) {
 		freeup(*imgs[i]);
 		delete imgs[i];
@@ -534,24 +501,9 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 	onetime_setup_pg(k, m, n, &SSt2_on_dev,&XSt2_on_dev,&G_on_dev,&X_BS_on_dev);
 	gpu::checkErrors(); gpu::checkCublasError();
 	
-//	float nfobj;
-//	cerr << "Before calcobjective... " << endl;
-//	nfobj = calc_objective(k,m,n,opts.sigma,opts.beta,B_on_dev,S_on_dev,X_on_dev,X_BS_on_dev);
-//	cerr << "Before init scaling, fobj: " << nfobj << endl;
-//	gpu::checkErrors(); gpu::checkCublasError();
-//	cerr << "Before scaling b down \n"; 
-//	scale_down_b(n,k,opts.c,B_on_dev);
-//	gpu::checkErrors(); gpu::checkCublasError();
-//	CUT_SAFE_CALL(cudaMemcpy((void *)(B.values),(const void *)(B_on_dev),
-//			k*n*sizeof(float),cudaMemcpyDeviceToHost));	
-//	print_matrix(B,"Initial B");
-//	cerr << "After init scaling, fobj: " << 
-//	calc_objective(k,m,n,opts.sigma,opts.beta,B_on_dev,S_on_dev,X_on_dev,X_BS_on_dev) << endl;
-	
 	std::vector<Matrix*> ss;
 	cerr << "iepoch, fobj, coeffs_time, basis_time, avg_nnz\n";
 	for(int iepoch=0;iepoch<opts.nepoch; iepoch++) {
-//		cerr << "iepoch: " << iepoch << endl;
 		float fobj=0;
 		float coeff_time=0, basis_time=0;
 		int nonzeros = 0;
@@ -561,8 +513,6 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 			X.num_ptrs = m;
 			X.num_vals = k;
 			X.values = bigX.values+(ibatch*m*k);
-//			print_matrix(X,"Input X");
-//			write_basis("patch", X, ibatch); 
 			Matrix* S=0;
 			if(ss.size()<(ibatch+1)) {
 				S = new Matrix(); 
@@ -570,12 +520,11 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 				ss.push_back(S);
 				for(int i=0;i<n;i++) {
 					for(int j=0;j<m;j++) {
-						// set_val(*S,i,j,(float)rand()/(float)RAND_MAX);
 						set_val(*S,i,j,0);
 					}
 				}
 			} else {
-//				cerr << "Reusing S for batch " << ibatch<< endl;
+                // Reusing S for batch...
 				S = ss[ibatch];
 			}
 			// Repeat until convergence of original cost function:
@@ -585,12 +534,9 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 			CUT_SAFE_CALL(cudaMemcpy(X_on_dev,X.values,
 					k*m*sizeof(float),cudaMemcpyHostToDevice));
 			gpu::checkErrors(); gpu::checkCublasError();
-//			print_matrix(*S,"S at start of pair");
 			// 3) solve for coefficients using fixed B
-//			cerr << "Before coeffs, fobj: " << calc_objective(k,m,n,opts.sigma,opts.beta,B_on_dev,S_on_dev,X_on_dev,X_BS_on_dev) << endl;
 			float l1ls_time=0;
 			{
-				// cerr << "l1ls_coord_descent_cu...\n";
 				gpu::GpuEventTimer timer(l1ls_time);
 				l1ls_coord_descent_cu_basic(k, m, n, B_on_dev,
 						BtB_on_dev, X_on_dev, XtB_on_dev, S_on_dev);
@@ -605,7 +551,6 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 			// 4) solve for basis using fixed S
 			float b_time=0;
 			{
-				// cerr << "proj_grad_descent_cu...\n";
 				gpu::GpuEventTimer timer(b_time);
 				float tmp = proj_grad_descent_cu_basic
 				(opts.c,opts.sigma, opts.eta, opts.beta, opts.nbasis_iters,
@@ -613,12 +558,10 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 						B_on_dev,X_on_dev,
 						S_on_dev,SSt2_on_dev,XSt2_on_dev,G_on_dev,X_BS_on_dev);
 				gpu::checkErrors(); gpu::checkCublasError();
-//				cerr << "done proj_grad_descent_cu.\n";
 			}
 
 			basis_time +=b_time;
 			nonzeros += nnz(*S);
-//			cerr << "nonezeros: " << nonzeros<< ", sz: " << (ibatch+1)*m*n << endl;
 		}
 		cerr << iepoch+1 << ", " << fobj/((float)(nbatches*m)) << ", " << 
 		coeff_time/1000.0 << ", " << basis_time/1000.0 << ", " <<
@@ -627,19 +570,12 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 				k*n*sizeof(float),cudaMemcpyDeviceToHost));	
 		write_basis(opts,"",B,iepoch);
 	}
-//	cerr << "Tearing down ...\n";
 	CUT_SAFE_CALL(cudaMemcpy((void *)(B.values),(const void *)(B_on_dev),
 			k*n*sizeof(float),cudaMemcpyDeviceToHost));	
-	//	print_matrix(B,"Final B");
-//	cerr << "onetime_teardown ...\n";
 	onetime_teardown(B_on_dev, BtB_on_dev, X_on_dev, XtB_on_dev, S_on_dev);
-//	cerr << "onetime_teardown_pg ...\n";
 	onetime_teardown_pg(SSt2_on_dev, XSt2_on_dev, G_on_dev, X_BS_on_dev);
 
-//	cerr << "cublasShutdown ...\n";
 	cublasShutdown();
-	// dump basis into files for visualization
-//	cerr << "freeup imgs ...\n";
 	for(size_t i=0;i<ss.size();++i) {
 		freeup(*ss[i]);
 		delete ss[i];
@@ -837,49 +773,6 @@ void find_coeffs_for_letters(const Options& opts)
 	freeup(S);
 }
 
-int main_together(int argc, const char** argv)
-{
-	float expt_time=0;
-	{ 
-		cpu::CpuEventTimer timer(expt_time);
-
-		Options opts;
-		read_options(argc, argv, opts);
-
-		std::string device_name = gpu::initialize_device(opts.device); 
-		cerr << "Initialized device: " << device_name<<endl;
-		run_expt_on_natural_images(opts);
-	}
-	return 0;
-}
-
-void test_cublas() {
-	cublasInit();
-	float x[5]={1,2,3,4,5};
-	float y[5]={10,20,30,40,50};
-	float alpha = 2;
-	float *x_dev, *y_dev;
-	cublasAlloc(5,sizeof(float),(void**)&x_dev);
-	cublasSetVector(5,sizeof(float),x,1,x_dev,1);
-	cublasAlloc(5,sizeof(float),(void**)&y_dev);
-	cublasSetVector(5,sizeof(float),y,1,y_dev,1);
-
-	cerr << "Norm of 30, 40: " << cublasSnrm2(2,(y_dev+2),1);
-	cerr << "\nShould be 50\n";
-	cerr << "Norm of 3, 4: " << cublasSnrm2(2,(y_dev+2),1);
-	cerr << "\nShould be 5\n";
-
-	cublasSaxpy(5,alpha,x_dev,1,y_dev,1);
-	cublasGetVector(5,sizeof(float),y_dev,1,y,1);
-	for(int i=0;i<5;i++) {
-		cerr << y[i] << " ";
-	}
-	cerr << "\nShould be:\n12 24 36 48 60\n" << endl;
-	cublasFree(x_dev);
-	cublasFree(y_dev);
-	cublasShutdown();
-}
-
 int main(int argc, const char** argv)
 {
 	Options opts;
@@ -933,9 +826,6 @@ int main(int argc, const char** argv)
 		cerr << "Finding coefficients\n";
 		find_coeffs_for_letters(opts);
 		return 0;
-	} else if(strcmp(opts.runwhat,"testcublas")==0) {
-		cerr << "Testing cublas\n";
-		test_cublas();
-	}
+	} 
 	return 0;
 }

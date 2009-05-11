@@ -58,7 +58,6 @@ float proj_grad_descent_cu (Matrix& Bout, /* : output, size: k, n */
 	// scale down B
 	for(int j=0;j<n;++j) {
 		float sumsq = cublasSnrm2(k,B_on_dev+k*j,1);
-//		cerr << "j, sumsq: "<< j<<" "<< sumsq << endl;
 		if (sumsq>c) {
 			cublasSscal(k,sqrt(c)/sumsq,B_on_dev+k*j,1);			
 		}
@@ -67,44 +66,32 @@ float proj_grad_descent_cu (Matrix& Bout, /* : output, size: k, n */
 	cublasSgemm('n','n',k,m,n,-1.0,B_on_dev,k,S_on_dev,n,0,X_BS_on_dev,k);
 	cublasSaxpy(k*m,1.0,X_on_dev,1,X_BS_on_dev,1);
 	nfobj = cublasSnrm2(k*m,X_BS_on_dev,1);
-	nfobj2 = cublasSasum(k*m,S_on_dev,1);  // should it be sum of cols and then max over that?
+	nfobj2 = cublasSasum(k*m,S_on_dev,1);  
 	nfobj = nfobj*nfobj/(2*sigma*sigma)+beta*nfobj2;
-//	nfobj = nfobj*nfobj/(2*sigma*sigma);
 	cerr << "Initial objective: " << nfobj<<endl;
 	fobj.push_back(nfobj);
 	
 	while(true && iter>niters) {
 		iter++;
-//		cerr << "Iteration: " << iter;
 		float eta_this = 10*eta/(10+iter);
 		cublasSgemm('n','n',k,n,n,1.0,B_on_dev,k,SSt2_on_dev,n,0,G_on_dev,k);
-//		cerr << "Set G=B*2*SSt\n";
 		// G = B*2SS'
 		// G = G-2XS' (ie. G = B*2SS'-2XS')
 		cublasSaxpy(k*n,-1,XSt2_on_dev,1,G_on_dev,1);
-//		cerr << "Set G=B*2*SSt-2XSt\n";
 		// B = B - eta_this*G
 		cublasSaxpy(k*n,-eta_this,G_on_dev,1,B_on_dev,1);
-//		cerr << "Set B=B-eta*(B*2*SSt-2XSt)\n";
 		for(int j=0;j<n; ++j) {
 			float sumsq = cublasSnrm2(k,B_on_dev+k*j,1);
-//			cerr << "j, sumsq: "<< j<<" "<< sumsq << endl;
 			if (sumsq>c) {
 				cublasSscal(k,sqrt(c)/sumsq,B_on_dev+k*j,1);			
 			}
 		}
-//		cerr << "Scaled down B\n";
-		
 		cublasSgemm('n','n',k,m,n,-1.0,B_on_dev,k,S_on_dev,n,0,X_BS_on_dev,k);
-//		cerr << "Set X_BS=-BS matrix\n";
 		cublasSaxpy(k*m,1.0,X_on_dev,1,X_BS_on_dev,1);
-//		cerr << "Set X_BS=X-BS matrix\n";
 		nfobj = cublasSnrm2(k*m,X_BS_on_dev,1);
-		nfobj2 = cublasSasum(k*m,S_on_dev,1);  // should it be sum of cols and then max over that?
+		nfobj2 = cublasSasum(k*m,S_on_dev,1);  
 		nfobj = nfobj*nfobj/(2*sigma*sigma)+beta*nfobj2;
-//		nfobj = nfobj*nfobj/(2*sigma*sigma);
 		fobj.push_back(nfobj);
-//		cerr << " fobj: " << nfobj;
 		if(iter>=mv_avg_win) {
 			mv_avg = 0;
 			for(int i=iter-mv_avg_win; i<iter; ++i) {
@@ -112,7 +99,6 @@ float proj_grad_descent_cu (Matrix& Bout, /* : output, size: k, n */
 			}
 			mv_avg = mv_avg/(float)mv_avg_win;
 			float criteria = fabs((nfobj-mv_avg)/mv_avg);
-//			cerr << " criteria: " << criteria;
 			if(criteria<tol) 
 				break;
 		}
@@ -172,9 +158,6 @@ float proj_grad_descent_cu_basic (float c, /* : input */
 		float* X_BS_on_dev) /* : input, size: size n, m */ 
 {	
 	// compute...
-//	float nfobj = calc_objective(k,m,n,sigma,beta,B_on_dev,S_on_dev,X_on_dev,X_BS_on_dev);
-//	cerr << "Initial objective: " << nfobj<<endl;
-
 	//	ss2 = 2*S*S' = 2*S*S' + 0*SS2
 	cublasSgemm('n','t',n,n,m,2.0,S_on_dev,n,S_on_dev,n,0,SSt2_on_dev,n);
 	//	xs2 = 2*X*S' = 2*X*S' + 0*XS2
@@ -185,99 +168,44 @@ float proj_grad_descent_cu_basic (float c, /* : input */
 	
 	// scale down B
 	scale_down_b(n,k,c,B_on_dev);
-//	nfobj = calc_objective(k,m,n,sigma,beta,B_on_dev,S_on_dev,X_on_dev,X_BS_on_dev);
-//	cerr << "Initial objective after scaling: " << nfobj<<endl;
 
-//	float tol = 1e-3;
-//	int mv_avg_win = 30;
-//	float mv_avg=0;
-//	fobj.push_back(nfobj);
-//	while(true) {
 	for(iter=0;iter<niter;++iter) {
-//		iter++;
-//		cerr << "Iteration: " << iter;
 		float eta_this = 10*eta/(10+iter);
 		cublasSgemm('n','n',k,n,n,1.0,B_on_dev,k,SSt2_on_dev,n,0,G_on_dev,k);
-//		cerr << "Set G=B*2*SSt\n";
 		// G = B*2SS'
 		// G = G-2XS' (ie. G = B*2SS'-2XS')
 		cublasSaxpy(k*n,-1,XSt2_on_dev,1,G_on_dev,1);
-//		cerr << "Set G=B*2*SSt-2XSt\n";
 		// B = B - eta_this*G
 		cublasSaxpy(k*n,-eta_this,G_on_dev,1,B_on_dev,1);
-//		cerr << "Set B=B-eta*(B*2*SSt-2XSt)\n";
 		scale_down_b(n,k,c,B_on_dev);
-//		cerr << "Scaled down B\n";
-//		nfobj = calc_objective(k,m,n,sigma,beta,B_on_dev,S_on_dev,X_on_dev,X_BS_on_dev);
-//		fobj.push_back(nfobj);
-////		cerr << " fobj: " << nfobj;
-//		if(iter>=mv_avg_win) {
-//			mv_avg = 0;
-//			for(int i=iter-mv_avg_win; i<iter; ++i) {
-//				mv_avg += fobj[i];
-//			}
-//			mv_avg = mv_avg/(float)mv_avg_win;
-//			float criteria = fabs((nfobj-mv_avg)/mv_avg);
-////			cerr << " criteria: " << criteria<<endl;
-//			if(criteria<tol) 
-//				break;
-//		}
-////		cerr << endl;
 	}
 	return calc_objective(k,m,n,sigma,beta,B_on_dev,S_on_dev,X_on_dev,X_BS_on_dev);
-}
-
-void calc_objective2(float& fobj, float& fresidue, float& fsparsity,
-                int k, int m, int n, float sigma, float beta, 
-		float* B_on_dev, float* S_on_dev, float* X_on_dev, float* X_BS_on_dev) 
-{
-	cublasSgemm('n','n',k,m,n,-1.0,B_on_dev,k,S_on_dev,n,0,X_BS_on_dev,k);
-	gpu::checkErrors(); gpu::checkCublasError();
-	cublasSaxpy(k*m,1.0,X_on_dev,1,X_BS_on_dev,1);
-	gpu::checkErrors(); gpu::checkCublasError();
-	float nfobj = cublasSnrm2(k*m,X_BS_on_dev,1);
-	gpu::checkErrors(); gpu::checkCublasError();
-	float nfobj2 = cublasSasum(n*m,S_on_dev,1);  // should it be sum of cols and then max over that?
-	gpu::checkErrors(); gpu::checkCublasError();
-        fresidue = nfobj*nfobj/(2*sigma*sigma);
-        fsparsity = beta*nfobj2;
-	fobj = fresidue + fsparsity;
 }
 
 float calc_objective(int k, int m, int n, float sigma, float beta, 
 		float* B_on_dev, float* S_on_dev, float* X_on_dev, float* X_BS_on_dev) 
 {
-//	cerr << "Calc objective\n";
-//	cerr << "cublasSgemm\n";
 	cublasSgemm('n','n',k,m,n,-1.0,B_on_dev,k,S_on_dev,n,0,X_BS_on_dev,k);
 	gpu::checkErrors(); gpu::checkCublasError();
-//		cerr << "Set X_BS=-BS matrix\n";
-//	cerr << "cublasSaxpy\n";
 	cublasSaxpy(k*m,1.0,X_on_dev,1,X_BS_on_dev,1);
 	gpu::checkErrors(); gpu::checkCublasError();
-//		cerr << "Set X_BS=X-BS matrix\n";
-//	cerr << "cublasSnrm2\n";
 	float nfobj = cublasSnrm2(k*m,X_BS_on_dev,1);
 	gpu::checkErrors(); gpu::checkCublasError();
-//	cerr << "cublasSasum\n";
-	float nfobj2 = cublasSasum(n*m,S_on_dev,1);  // should it be sum of cols and then max over that?
+	float nfobj2 = cublasSasum(n*m,S_on_dev,1);  
 	gpu::checkErrors(); gpu::checkCublasError();
         float fresidue, fsparsity;
         fresidue = nfobj*nfobj/(2*sigma*sigma);
         fsparsity = beta*nfobj2;
 	nfobj = fresidue + fsparsity;
-//	cerr << "...Calc objective\n";
 	return nfobj;
 }
 
 // scale down B
 void scale_down_b(int n, int k, float c, float* B_on_dev) 
 {
-//	cerr << "Scale b down\n";
 	for(int j=0;j<n;++j) {
 		float sumsq = cublasSnrm2(k,B_on_dev+k*j,1);
 		gpu::checkErrors(); gpu::checkCublasError();
-//		cerr << "j, sumsq: "<< j<<" "<< sumsq << endl;
 		if (sumsq>c) {
 			cublasSscal(k,sqrt(c)/sumsq,B_on_dev+k*j,1);			
 			gpu::checkErrors(); gpu::checkCublasError();

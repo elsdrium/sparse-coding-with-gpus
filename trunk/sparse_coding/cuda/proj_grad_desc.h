@@ -36,9 +36,6 @@ void onetime_teardown_pg(float* SSt2_on_dev,
 		float* G_on_dev,
 		float* X_BS_on_dev);
 
-void calc_objective2(float& fobj, float& fresidue, float& fsparsity,
-                int k, int m, int n, float sigma, float beta, 
-		float* B_on_dev, float* S_on_dev, float* X_on_dev, float* X_BS_on_dev);
 float calc_objective(int k, int m, int n, float sigma, float beta, 
 		float* B_on_dev, float* S_on_dev, float* X_on_dev, float* X_BS_on_dev);
 void scale_down_b(int n, int k, float c, float* B_on_dev);

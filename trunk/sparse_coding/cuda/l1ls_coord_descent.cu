@@ -50,7 +50,6 @@ __device__ float getata(const float* ata_on_dev, int row, int col) {
 	// AtA is row-contiguous
 }
 
-// TODO: HANDLE ANY # for n by having a thread doing more work
 extern __shared__ float shared_buf[];
 
 __shared__ float af;
@@ -71,7 +70,6 @@ __global__ void kernel_l1ls_coord_descent_sub
 {
   int tpb = (const_n>512)?512:const_n;
   // This block, handles one training data 
-//	DEBUGIFY(printf("begin:[kernel_l1ls_coord_descent_sub][t:%d][b:%d]\n",threadIdx.x,blockIdx.x););
   // * Called with n threads per block, and m blocks
 
   float* x = shared_buf; // needs local, take norm
@@ -109,7 +107,7 @@ __global__ void kernel_l1ls_coord_descent_sub
     if(threadIdx.x==0) {
       bf=0;
       for(j=0;j<const_n; ++j) {
-	bf -= buff[j]*d[j];
+        bf -= buff[j]*d[j];
       }
     }
     // ...DONE with buff as y_minus_Ax_t_A
@@ -176,7 +174,6 @@ __global__ void kernel_l1ls_coord_descent_sub
     *(xout+blockIdx.x*const_n+i) = x[i];
   }
   // xout is of size nxm and is col-contiguous
-  //	DEBUGIFY(printf("end:[kernel_l1ls_coord_descent_sub][t:%d][b:%d]\n",threadIdx.x,blockIdx.x););
   if(threadIdx.x==0) {
     if(iter>=150) (*gcount)++;
   }
@@ -210,8 +207,6 @@ void onetime_setup(int k, int m, int n, float gamma, float** A_on_dev, float** A
 	CUT_SAFE_CALL(cudaMalloc((void**)(YtA_on_dev),ytasize));
 
 	float ha[] = {3, 1, 1e-1, 3e-2, 1e-2};
-	// float ha[] = {1, 3e-1, 1e-1, 3e-2, 1e-2};
-	// float ha[] = {3e-2, 1e-2, 3e-3, 1e-3, 3e-4};
 	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_k,(const void*)(&k),sizeof(k)));
 	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_m,(const void*)(&m),sizeof(m)));
 	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_n,(const void*)(&n),sizeof(n)));
@@ -239,8 +234,6 @@ void setup_device_memory(const Matrix& A, const Matrix& Y,
 	CUT_SAFE_CALL(cudaMalloc((void**)(Xn_on_dev),xoutsize));
 	
 	float ha[] = {3, 1, 1e-1, 3e-2, 1e-2};
-	// float ha[] = {3, 3e-1, 1e-1, 3e-2, 1e-2};
-	// float ha[] = {3e-2, 1e-2, 3e-3, 1e-3, 3e-4};
 	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_k,(const void*)(&k),sizeof(k)));
 	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_m,(const void*)(&m),sizeof(m)));
 	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_n,(const void*)(&n),sizeof(n)));
@@ -254,21 +247,16 @@ void setup_device_memory(const Matrix& A, const Matrix& Y,
 
 __global__ void kernel_compute_AtA(const float* a, float* AtA_on_dev) 
 {
-//	printf("begin:[kernel_compute_AtA]\n");
 	int i, j;
 	i = threadIdx.x+blockIdx.x*blockDim.x;
 	j = threadIdx.y+blockIdx.y*blockDim.y;
-//	printf("Thread dealing with row: %d, col: %d\n",i,j);
-//	printf("const_n %d, const_k %d, const_m %d\n",const_n,const_k,const_m);
 	if((i<const_n) && (j<const_n)) {
 		float temp=0.0;
 		for(int l=0; l<const_k; ++l) {
-			//		temp+=get_val(A,l,i)*get_val(A,l,j);
 			temp += geta(a,l,i)*geta(a,l,j);
 		}
 		*(AtA_on_dev+const_n*i+j) = temp;
 	}
-//	printf("end:[kernel_compute_AtA]\n");
 }
 
 __global__ void kernel_compute_YtA(const float* A_on_dev, float* Y_on_dev, 
@@ -334,15 +322,12 @@ void l1ls_coord_descent_cu (Matrix& Xout, /* : output, size: n, m */
 	float* Y_on_dev;
 	float* Xn_on_dev;
 	float* YtA_on_dev;
-//	std::cerr << "Setting up device memory...\n";
 	setup_device_memory(A,Y,&A_on_dev,&Y_on_dev,&AtA_on_dev,
 			&YtA_on_dev,&Xn_on_dev,gamma);
 	gpu::checkErrors(); 
 	
-//	std::cerr << "Computing AtA on device...\n";
 	compute_AtA_on_device(A_on_dev,AtA_on_dev,k,n);
 	gpu::checkErrors(); 
-//	std::cerr << "...done.\n";
 	compute_YtA_on_device(A_on_dev,Y_on_dev,YtA_on_dev,m,n);
 	gpu::checkErrors(); 
 
@@ -351,9 +336,6 @@ void l1ls_coord_descent_cu (Matrix& Xout, /* : output, size: n, m */
 	// * Then call with n threads per block, and m blocks
 	dim3 blocks(m);
 	dim3 threads_per_block(tpb);
-	// for x,ytA,xstar,y_minus_Ax_t_A,d,xn,dtAtA each of size n....
-//	int shared_mem_size = sizeof(float)*7*n; 
-	// for x,ytA,xbuff,y_minus_Ax_t_A,d,x,dtAtA each of size n....
 	int shared_mem_size = sizeof(float)*3*n; 
 	cudaDeviceProp prop;
 	gpu::get_device_infos(0,prop);
@@ -363,9 +345,6 @@ void l1ls_coord_descent_cu (Matrix& Xout, /* : output, size: n, m */
 		" threads per block. Max " << prop.maxThreadsPerBlock << " allowed\n";
 		exit(EXIT_FAILURE);
 	}
-//	std::cerr<<"Launching kernel_l1ls_coord_descent_sub with " << m << " blocks, and " << n << " threads each\n";
-//	cerr << "l1ls_coord_descent_cu calling kernel_l1ls_coord_descent_sub: threads: " << tpb << endl;
- //       cerr << "Shared_mem_size: " << shared_mem_size << endl;	
         int* gcounts;
 	int counts=0;
 	CUT_SAFE_CALL(cudaMalloc((void**)(&gcounts),sizeof(int)));
@@ -375,13 +354,11 @@ void l1ls_coord_descent_cu (Matrix& Xout, /* : output, size: n, m */
 	CUT_SAFE_CALL(cudaMemcpy((void *)(&counts),(const void *)(gcounts),
 			sizeof(int),cudaMemcpyDeviceToHost));	
 	CUT_SAFE_CALL(cudaFree(gcounts));
-        // cerr << "Number of points not found: " << counts << endl;
 	if(!gpu::checkErrors()) {
 		teardown_device_memory(A_on_dev,Y_on_dev,AtA_on_dev,
 				YtA_on_dev,Xn_on_dev,Xout,n,m);	
 		exit(EXIT_FAILURE);
 	}
-//	std::cerr<<"..done.\n";
 
 	// * Free device memory
 	teardown_device_memory(A_on_dev,Y_on_dev,AtA_on_dev,YtA_on_dev,Xn_on_dev,
@@ -397,9 +374,7 @@ void l1ls_coord_descent_cu_basic (int k, int m, int n,
 		float* Xn_on_dev)
 {		
 	compute_AtA_on_device(A_on_dev,AtA_on_dev,k,n);	
-//	cerr << "Computed AtA on device\n";
 	compute_YtA_on_device(A_on_dev,Y_on_dev,YtA_on_dev,m,n);
-//	cerr << "Computed YtA on device\n";
         int tpb = (n>512)?512:n;
 
 	dim3 blocks(m);
@@ -413,9 +388,7 @@ void l1ls_coord_descent_cu_basic (int k, int m, int n,
 		" threads per block. Max " << prop.maxThreadsPerBlock << " allowed\n";
 		exit(EXIT_FAILURE);
 	}
-//	cerr << "l1ls_coord_descent_cu_basic calling kernel_l1ls_coord_descent_sub: threads: " << tpb << endl;
-        //cerr << "Shared_mem_size: " << shared_mem_size << endl;
-        int* gcounts;
+    int* gcounts;
 	int counts=0;
 	CUT_SAFE_CALL(cudaMalloc((void**)(&gcounts),sizeof(int)));
         CUT_SAFE_CALL(cudaMemcpy(gcounts,&counts,sizeof(int),cudaMemcpyHostToDevice));
@@ -424,6 +397,5 @@ void l1ls_coord_descent_cu_basic (int k, int m, int n,
 	CUT_SAFE_CALL(cudaMemcpy((void *)(&counts),(const void *)(gcounts),
 			sizeof(int),cudaMemcpyDeviceToHost));	
 	CUT_SAFE_CALL(cudaFree(gcounts));
-        // cerr << "Number of points not found: " << counts << endl;
 	return;
 }
