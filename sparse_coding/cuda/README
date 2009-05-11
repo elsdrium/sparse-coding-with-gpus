@@ -1,11 +1,17 @@
-=====================================================
+====================================================
+Author: Anand Madhavan
+Stanford University
+====================================================
+
+====================================================
 How to run:
-=====================================================
+====================================================
 Edit Makefile and update CUDA_INC and CUDA_LIB to your machine's CUDA locations for the include and library files.
 
-$ make
-$ ./cl1ls -mb=1000 -nb=5 -k=1024 -n=1024 -nepoch=3 -imagesdir=../../images 
-  -runwhat=natural -basisdir=tmp -beta=0.25 -nbasis_iters=30 -eta=0.04
+Run:
+$ ./paper_demo.sh
+or
+$ ./paper.sh
 
 ====================================================
 Description:
@@ -44,3 +50,5 @@ least squares using coordinate descent. This uses kernel CUDA code.
 
 proj_grad_descent.cu: proj_grad_descent_cu_basic
  function that computes the basis using fixed coefficients and uses CuBLAS.
+
+

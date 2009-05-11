@@ -1,3 +1,5 @@
+/* Author: Anand Madhavan */
+
 #include "GPU.hh"
 #include <iostream>
 #include "cublas.h"

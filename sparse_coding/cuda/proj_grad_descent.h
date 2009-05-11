@@ -1,3 +1,4 @@
+/* Author: Anand Madhavan */
 #ifndef __PROJ_GRAD_DESCENT_H__
 #define __PROJ_GRAD_DESCENT_H__
 
@@ -14,6 +15,7 @@ float proj_grad_descent_cu (Matrix& Bout, /* : output, size: k, n */
 		/*const*/ Matrix& X, /* : input, size: k, m */
 		/*const*/ Matrix& S); /* : input, size: size n, m */
 
+// Version of above used in conjunction with onetime_setup_pg and onetime_teardown_pg..
 float proj_grad_descent_cu_basic (float c, /* : input */
 		float sigma, /* : input */
 		float eta, float beta, int niter,

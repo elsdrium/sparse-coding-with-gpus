@@ -1,12 +1,11 @@
+/* Author: Anand Madhavan */
 #ifndef __MATRIX_H__
 #define __MATRIX_H__
 #include <vector>
 #include <string>
 
-//typedef std::vector<std::vector<float> > Matrix; // nothing fancy for now
 struct Matrix {
 	float* values;
-//	float** values;
 	int num_ptrs;
 	int num_vals; // #cols (if row contiguous) or  #rows (if col contiguous)
 	bool row_contiguous; 

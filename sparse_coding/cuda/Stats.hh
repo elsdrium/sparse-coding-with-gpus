@@ -1,3 +1,4 @@
+/* Author: Anand Madhavan */
 #ifndef __STATS_HH__
 #define __STATS_HH__
 
