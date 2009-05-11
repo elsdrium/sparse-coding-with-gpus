@@ -1,5 +1,6 @@
 # Author: Anand Madhavan
-# Please change these two..
+
+# NOTE: Please change these two..
 CUDA_INC	:= /Developer/CUDA/common/inc
 CUDA_LIB	:= /usr/local/cuda
 # change to point to local CUDA installations.
