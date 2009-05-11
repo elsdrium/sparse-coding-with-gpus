@@ -27,4 +27,3 @@ $(TARGET): *.cu *.cc *.hh Makefile
 
 clean:
 	rm -f *.cu_o *.o *.prof *.ptx $(TARGET) 
-	rm -rf Debug
