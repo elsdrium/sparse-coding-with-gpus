@@ -185,12 +185,12 @@ __global__ void kernel_l1ls_coord_descent_sub
 void onetime_teardown(float* A_on_dev, float* AtA_on_dev,
 		float* Y_on_dev, float* YtA_on_dev, float* Xn_on_dev)
 {
-	CUT_SAFE_CALL(cublasFree(A_on_dev));
-	CUT_SAFE_CALL(cublasFree(Y_on_dev));
-	CUT_SAFE_CALL(cublasFree(Xn_on_dev));
+	cublasFree(A_on_dev);
+	cublasFree(Y_on_dev);
+	cublasFree(Xn_on_dev);
 
-	CUT_SAFE_CALL(cudaFree(AtA_on_dev));
-	CUT_SAFE_CALL(cudaFree(YtA_on_dev));
+	cudaFree(AtA_on_dev);
+	cudaFree(YtA_on_dev);
 }
 
 void onetime_setup(int k, int m, int n, float gamma, float** A_on_dev, float** AtA_on_dev, 
@@ -205,15 +205,15 @@ void onetime_setup(int k, int m, int n, float gamma, float** A_on_dev, float** A
 
 	int atasize = n*n*sizeof(float);
 	int ytasize = m*n*sizeof(float);
-	CUT_SAFE_CALL(cudaMalloc((void**)(AtA_on_dev),atasize));
-	CUT_SAFE_CALL(cudaMalloc((void**)(YtA_on_dev),ytasize));
+	cutilSafeCall(cudaMalloc((void**)(AtA_on_dev),atasize));
+	cutilSafeCall(cudaMalloc((void**)(YtA_on_dev),ytasize));
 
 	float ha[] = {3, 1, 1e-1, 3e-2, 1e-2};
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_k,(const void*)(&k),sizeof(k)));
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_m,(const void*)(&m),sizeof(m)));
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_n,(const void*)(&n),sizeof(n)));
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_gamma,(const void*)(&gamma),sizeof(gamma)));
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(alphas,(const void*)(&ha),5*sizeof(float)));
+	cutilSafeCall(cudaMemcpyToSymbol(const_k,(const void*)(&k),sizeof(k)));
+	cutilSafeCall(cudaMemcpyToSymbol(const_m,(const void*)(&m),sizeof(m)));
+	cutilSafeCall(cudaMemcpyToSymbol(const_n,(const void*)(&n),sizeof(n)));
+	cutilSafeCall(cudaMemcpyToSymbol(const_gamma,(const void*)(&gamma),sizeof(gamma)));
+	cutilSafeCall(cudaMemcpyToSymbol(alphas,(const void*)(&ha),5*sizeof(float)));
 }
 
 void setup_device_memory(const Matrix& A, const Matrix& Y, 
@@ -229,21 +229,21 @@ void setup_device_memory(const Matrix& A, const Matrix& Y,
 	int ytasize = m*n*sizeof(float);
 	int xoutsize = n*m*sizeof(float);
 	
-	CUT_SAFE_CALL(cudaMalloc((void**)(A_on_dev),asize));
-	CUT_SAFE_CALL(cudaMalloc((void**)(AtA_on_dev),atasize));
-	CUT_SAFE_CALL(cudaMalloc((void**)(Y_on_dev),ysize));
-	CUT_SAFE_CALL(cudaMalloc((void**)(YtA_on_dev),ytasize));
-	CUT_SAFE_CALL(cudaMalloc((void**)(Xn_on_dev),xoutsize));
+	cutilSafeCall(cudaMalloc((void**)(A_on_dev),asize));
+	cutilSafeCall(cudaMalloc((void**)(AtA_on_dev),atasize));
+	cutilSafeCall(cudaMalloc((void**)(Y_on_dev),ysize));
+	cutilSafeCall(cudaMalloc((void**)(YtA_on_dev),ytasize));
+	cutilSafeCall(cudaMalloc((void**)(Xn_on_dev),xoutsize));
 	
 	float ha[] = {3, 1, 1e-1, 3e-2, 1e-2};
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_k,(const void*)(&k),sizeof(k)));
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_m,(const void*)(&m),sizeof(m)));
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_n,(const void*)(&n),sizeof(n)));
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(const_gamma,(const void*)(&gamma),sizeof(gamma)));
-	CUT_SAFE_CALL(cudaMemcpyToSymbol(alphas,(const void*)(&ha),5*sizeof(float)));
+	cutilSafeCall(cudaMemcpyToSymbol(const_k,(const void*)(&k),sizeof(k)));
+	cutilSafeCall(cudaMemcpyToSymbol(const_m,(const void*)(&m),sizeof(m)));
+	cutilSafeCall(cudaMemcpyToSymbol(const_n,(const void*)(&n),sizeof(n)));
+	cutilSafeCall(cudaMemcpyToSymbol(const_gamma,(const void*)(&gamma),sizeof(gamma)));
+	cutilSafeCall(cudaMemcpyToSymbol(alphas,(const void*)(&ha),5*sizeof(float)));
 
-	CUT_SAFE_CALL(cudaMemcpy(*A_on_dev,A.values,asize,cudaMemcpyHostToDevice));
-	CUT_SAFE_CALL(cudaMemcpy(*Y_on_dev,Y.values,ysize,cudaMemcpyHostToDevice));
+	cutilSafeCall(cudaMemcpy(*A_on_dev,A.values,asize,cudaMemcpyHostToDevice));
+	cutilSafeCall(cudaMemcpy(*Y_on_dev,Y.values,ysize,cudaMemcpyHostToDevice));
 	gpu::checkErrors(); 
 }
 
@@ -298,14 +298,14 @@ void teardown_device_memory(float* A_on_dev, float* Y_on_dev,
 		float* AtA_on_dev, float* YtA_on_dev, 
 		float* Xn_on_dev, Matrix& Xout, int n, int m) 
 {
-	CUT_SAFE_CALL(cudaFree(A_on_dev));
-	CUT_SAFE_CALL(cudaFree(AtA_on_dev));
-	CUT_SAFE_CALL(cudaFree(Y_on_dev));
-	CUT_SAFE_CALL(cudaFree(YtA_on_dev));
+	cutilSafeCall(cudaFree(A_on_dev));
+	cutilSafeCall(cudaFree(AtA_on_dev));
+	cutilSafeCall(cudaFree(Y_on_dev));
+	cutilSafeCall(cudaFree(YtA_on_dev));
 	init(Xout,n,m,false); // NOTE: here we use internal data knowledge
-	CUT_SAFE_CALL(cudaMemcpy((void *)(Xout.values),(const void *)(Xn_on_dev),
+	cutilSafeCall(cudaMemcpy((void *)(Xout.values),(const void *)(Xn_on_dev),
 			n*m*sizeof(float),cudaMemcpyDeviceToHost));	
-	CUT_SAFE_CALL(cudaFree(Xn_on_dev));
+	cutilSafeCall(cudaFree(Xn_on_dev));
 	gpu::checkErrors(); 
 }
 
@@ -349,13 +349,13 @@ void l1ls_coord_descent_cu (Matrix& Xout, /* : output, size: n, m */
 	}
         int* gcounts;
 	int counts=0;
-	CUT_SAFE_CALL(cudaMalloc((void**)(&gcounts),sizeof(int)));
-        CUT_SAFE_CALL(cudaMemcpy(gcounts,&counts,sizeof(int),cudaMemcpyHostToDevice));
+	cutilSafeCall(cudaMalloc((void**)(&gcounts),sizeof(int)));
+    cutilSafeCall(cudaMemcpy(gcounts,&counts,sizeof(int),cudaMemcpyHostToDevice));
 	kernel_l1ls_coord_descent_sub<<<blocks,threads_per_block,shared_mem_size>>>
 	                  (gcounts,A_on_dev,Y_on_dev,AtA_on_dev,YtA_on_dev,Xn_on_dev);
-	CUT_SAFE_CALL(cudaMemcpy((void *)(&counts),(const void *)(gcounts),
+	cutilSafeCall(cudaMemcpy((void *)(&counts),(const void *)(gcounts),
 			sizeof(int),cudaMemcpyDeviceToHost));	
-	CUT_SAFE_CALL(cudaFree(gcounts));
+	cutilSafeCall(cudaFree(gcounts));
 	if(!gpu::checkErrors()) {
 		teardown_device_memory(A_on_dev,Y_on_dev,AtA_on_dev,
 				YtA_on_dev,Xn_on_dev,Xout,n,m);	
@@ -392,12 +392,12 @@ void l1ls_coord_descent_cu_basic (int k, int m, int n,
 	}
     int* gcounts;
 	int counts=0;
-	CUT_SAFE_CALL(cudaMalloc((void**)(&gcounts),sizeof(int)));
-        CUT_SAFE_CALL(cudaMemcpy(gcounts,&counts,sizeof(int),cudaMemcpyHostToDevice));
+	cutilSafeCall(cudaMalloc((void**)(&gcounts),sizeof(int)));
+    cutilSafeCall(cudaMemcpy(gcounts,&counts,sizeof(int),cudaMemcpyHostToDevice));
 	kernel_l1ls_coord_descent_sub<<<blocks,threads_per_block,shared_mem_size>>>
 	                  (gcounts,A_on_dev,Y_on_dev,AtA_on_dev,YtA_on_dev,Xn_on_dev);
-	CUT_SAFE_CALL(cudaMemcpy((void *)(&counts),(const void *)(gcounts),
+	cutilSafeCall(cudaMemcpy((void *)(&counts),(const void *)(gcounts),
 			sizeof(int),cudaMemcpyDeviceToHost));	
-	CUT_SAFE_CALL(cudaFree(gcounts));
+	cutilSafeCall(cudaFree(gcounts));
 	return;
 }

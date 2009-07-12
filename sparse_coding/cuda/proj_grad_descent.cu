@@ -70,7 +70,7 @@ float proj_grad_descent_cu (Matrix& Bout, /* : output, size: k, n */
 	nfobj = cublasSnrm2(k*m,X_BS_on_dev,1);
 	nfobj2 = cublasSasum(k*m,S_on_dev,1);  
 	nfobj = nfobj*nfobj/(2*sigma*sigma)+beta*nfobj2;
-	cerr << "Initial objective: " << nfobj<<endl;
+	std::cerr << "Initial objective: " << nfobj<<std::endl;
 	fobj.push_back(nfobj);
 	
 	while(true && iter>niters) {
@@ -104,9 +104,9 @@ float proj_grad_descent_cu (Matrix& Bout, /* : output, size: k, n */
 			if(criteria<tol) 
 				break;
 		}
-		cerr << endl;
+		std::cerr << std::endl;
 	}
-	cerr << endl;
+	std::cerr << std::endl;
 	cublasFree(X_BS_on_dev);
 	cublasFree(G_on_dev);
 	cublasFree(XSt2_on_dev);

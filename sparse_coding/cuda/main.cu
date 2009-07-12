@@ -495,7 +495,7 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
             set_val(B,i,j,get_val(B,i,j)/col_norm);
           }
 	}
-	CUT_SAFE_CALL(cudaMemcpy(B_on_dev,B.values,k*n*sizeof(float),cudaMemcpyHostToDevice));
+	cutilSafeCall(cudaMemcpy(B_on_dev,B.values,k*n*sizeof(float),cudaMemcpyHostToDevice));
 	gpu::checkErrors();
 
 	float *SSt2_on_dev, *XSt2_on_dev, *G_on_dev, *X_BS_on_dev;
@@ -530,9 +530,9 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 			}
 			// Repeat until convergence of original cost function:
 			// load S, X
-			CUT_SAFE_CALL(cudaMemcpy(S_on_dev,S->values,
+			cutilSafeCall(cudaMemcpy(S_on_dev,S->values,
 					n*m*sizeof(float),cudaMemcpyHostToDevice));
-			CUT_SAFE_CALL(cudaMemcpy(X_on_dev,X.values,
+			cutilSafeCall(cudaMemcpy(X_on_dev,X.values,
 					k*m*sizeof(float),cudaMemcpyHostToDevice));
 			gpu::checkErrors(); gpu::checkCublasError();
 			// 3) solve for coefficients using fixed B
@@ -545,7 +545,7 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 			}
 			coeff_time +=l1ls_time;
 
-			CUT_SAFE_CALL(cudaMemcpy((void *)(S->values),(const void *)(S_on_dev),
+			cutilSafeCall(cudaMemcpy((void *)(S->values),(const void *)(S_on_dev),
 					n*m*sizeof(float),cudaMemcpyDeviceToHost));
 			gpu::checkErrors(); gpu::checkCublasError();
 		        fobj += calc_objective(k,m,n,opts.sigma,opts.beta,B_on_dev,S_on_dev,X_on_dev,X_BS_on_dev);
@@ -567,11 +567,11 @@ void run_expt_together(const Matrix& bigX, const Options& opts)
 		cerr << iepoch+1 << ", " << fobj/((float)(nbatches*m)) << ", " << 
 		coeff_time/1000.0 << ", " << basis_time/1000.0 << ", " <<
 		(float)nonzeros/(float)(nbatches*m*n) << endl;
-		CUT_SAFE_CALL(cudaMemcpy((void *)(B.values),(const void *)(B_on_dev),
+		cutilSafeCall(cudaMemcpy((void *)(B.values),(const void *)(B_on_dev),
 				k*n*sizeof(float),cudaMemcpyDeviceToHost));	
 		write_basis(opts,"",B,iepoch);
 	}
-	CUT_SAFE_CALL(cudaMemcpy((void *)(B.values),(const void *)(B_on_dev),
+	cutilSafeCall(cudaMemcpy((void *)(B.values),(const void *)(B_on_dev),
 			k*n*sizeof(float),cudaMemcpyDeviceToHost));	
 	onetime_teardown(B_on_dev, BtB_on_dev, X_on_dev, XtB_on_dev, S_on_dev);
 	onetime_teardown_pg(SSt2_on_dev, XSt2_on_dev, G_on_dev, X_BS_on_dev);
