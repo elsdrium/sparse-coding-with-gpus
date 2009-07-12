@@ -1,14 +1,15 @@
 # Author: Anand Madhavan
 
-# NOTE: Please change these two..
+# NOTE: Please change these three..
 CUDA_INC	:= /Developer/CUDA/common/inc
 CUDA_LIB	:= /usr/local/cuda
+CUDA_SDK_LIB  := $(CUDA_LIB)/sdk/lib
 # change to point to local CUDA installations.
 
 NVCC       := nvcc
 CPP	       := g++
 CUDA_INC_PATH  := -I. -I$(CUDA_INC)
-CUDA_LIB_PATH  := -L$(CUDA_LIB)/sdk/lib -L$(CUDA_LIB)/lib
+CUDA_LIB_PATH  := -L$(CUDA_SDK_LIB) -L$(CUDA_LIB)/lib
 NVCC_OPTIONS   := 
 CPP_OPTIONS    := -fPIC -O3 
 CUDA_LIBS      := -lcutil -lcudart -lcublas
